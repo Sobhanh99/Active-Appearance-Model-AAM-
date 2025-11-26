@@ -9,9 +9,12 @@ This fork extends the AAM to support true RGB texture modeling and synthesis, pr
 Variations in lighting conditions can significantly affect texture representation and model fitting. To improve robustness, this fork introduces a light normalization stage based on iterative per-image linear normalization (z-score style). In this case, global brightness (offset) and contrast (scale) are estimated and removed.
 This technique reduces illumination-driven variability and leads to more consistent texture modeling and reconstruction across heterogeneous datasets.
 ### Comparing Face Generation in original with new version
-
+Below two faces have been predicted by both versions to have a better comparision
+Face1:
 ![Face1 Fitted by old version](https://github.com/Sobhanh99/Active-Appearance-Model-AAM-/blob/master/Face1%20Prediction%20with%20original%20version.png)
 ![Face1 Fitted by New version](https://github.com/Sobhanh99/Active-Appearance-Model-AAM-/blob/master/Face1%20Prediction%20with%20enhanced%20version.png)
+
+Face2:
 ![Face2 Fitted by old version](https://github.com/Sobhanh99/Active-Appearance-Model-AAM-/blob/master/Face2%20Prediction%20with%20original%20version.png)
 ![Face2 Fitted by New version](https://github.com/Sobhanh99/Active-Appearance-Model-AAM-/blob/master/Face2%20Prediction%20with%20enhanced%20version.png)
 
