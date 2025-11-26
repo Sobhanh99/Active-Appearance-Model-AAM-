@@ -1,5 +1,3 @@
-#texture utils
-
 
 def compute_mean_texture(data):
     N = data.shape[0]
