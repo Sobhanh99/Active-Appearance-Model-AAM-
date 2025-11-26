@@ -1,72 +1,85 @@
-import numpy as np 
-import os 
+#visualize_pointset
+import numpy as np
+import os
 import cv2
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from PIL import Image
+from scipy.spatial import Delaunay
 
-def get_coordinates_lfpw(img_path):
-	img_name = img_path.split('/')[-1].split('.')[0]
-	coord_path = '../data/lfpw/trainset/{}.pts'.format(img_name)
+def get_coordinates(img_lm):
+    x_values=[]
+    y_values=[]
 
-	with open(coord_path) as f:
-		content = f.readlines()
-	points = content[3:71]
-	x_values = np.array([float(point.split(' ')[0]) for point in points])
-	y_values = np.array([float(point.split(' ')[1]) for point in points])
+    if type(img_lm)==str:
+        s=os.path.splitext(os.path.basename(img_lm))[0]
+        landmarks=arr_SH[int(s)-1]
 
-	base = np.arange(68)
+    else:
+        img_lm=np.array(img_lm)
+        landmarks=img_lm #.reshape(-1,2)
 
-	connect_from = np.roll(base, -1, 0)
-	connect_to = np.roll(base, 1, 0)
+    for i in range(len(landmarks)):
+        x_values.append(landmarks[i][0])
+        y_values.append(landmarks[i][1])
+    x_values=np.asarray(x_values)
+    y_values=np.asarray(y_values)
 
-	return x_values, y_values, connect_from, connect_to
 
-def get_coordinates(img_path):
-	img_name = img_path.split('/')[-1].split('.')[0]
 
-	coord_path = os.path.join(os.path.join(*img_path.split('/')[0:-1]), 'asf/{}.asf'.format(img_name))
+    # Create a Delaunay triangulation of the landmarks
+    tri = Delaunay(np.column_stack((x_values, y_values)))
 
-	with open(coord_path) as f:
-		content = f.readlines()
-	points = content[16:89]
+    # Get the simplices of the triangulation
+    simplices = tri.simplices
 
-	x_values = np.array([float(point.split('\t')[2]) for point in points])
-	y_values = np.array([float(point.split('\t')[3]) for point in points])
+    # Define the connections between the landmarks using the simplices
 
-	connect_from = np.array([int(point.split('\t')[5]) for point in points])
-	connect_to = np.array([int(point.split('\t')[6]) for point in points])
+    connect_from = np.concatenate([tri.simplices[:, 0], tri.simplices[:,1], tri.simplices[:,2]],axis=0)
+    connect_to = np.concatenate([tri.simplices[:, 1], tri.simplices[:,2], tri.simplices[:,0]], axis=0)
 
-	return x_values, y_values, connect_from, connect_to
+    return x_values, y_values, connect_from, connect_to
 
-def plot_pointset_with_connections(x_values, y_values, connect_from, connect_to, label='connections', color='black'):
-	if color == 'black':
-		plt.scatter(x_values, y_values)
-	else:
-		plt.scatter(x_values, y_values, color=color)
-	for i, (c_f, c_t) in enumerate(zip(connect_from, connect_to)):
-		if i == 0:		
-			plt.plot([x_values[c_f], x_values[i]], [y_values[c_f], y_values[i]],label=label, color=color)
-		else:
-			plt.plot([x_values[c_f], x_values[i]], [y_values[c_f], y_values[i]], color=color)
-		plt.plot([x_values[i], x_values[c_t]], [y_values[i], y_values[c_t]], color=color)
+def plot_pointset_with_connections(x_values, y_values, connect_from, connect_to, label='connections', color='black', number_of_landmarks):
+    if color == 'black':
+        plt.scatter(x_values, y_values)
+    else:
+        plt.scatter(x_values, y_values, color=color)
+
+    for i, (c_f, c_t) in enumerate(zip(connect_from, connect_to)):
+        if i == number_of_landmarks:
+            break
+        plt.plot([x_values[c_f], x_values[i]], [y_values[c_f], y_values[i]], color=color)
+        plt.plot([x_values[i], x_values[c_t]], [y_values[i], y_values[c_t]], color=color)
 
 
 def visualize_checkpoints(img_path, show=True):
-	img = plt.imread(img_path)
-	
-	x_values, y_values, connect_from, connect_to = get_coordinates(img_path)
-	x_values *= img.shape[1]; y_values *= img.shape[0]
+	if type(img_path)==str:
+		img = plt.imread(img_path)
+		s = os.path.splitext(os.path.basename(img_path))[0]
+	if type(img_path)==np.ndarray:    #I added
+		img=img_path   # I added
+		for i in range(len(data)):
+			if (data[i]-img).any()==0:
+				s=int(i)+1
+				#print(s)
+				break
+	else:
+		img_path=str(f"{img_path}")
+		s = os.path.splitext(os.path.basename(img_path))[0]
+		img = plt.imread(img_path)
 
+
+
+	x_values, y_values, connect_from, connect_to = get_coordinates(arr_SH[int(s)-1])  #img_lm
+	x_values *= img.shape[1]; y_values *= img.shape[0]
 	fig, ax = plt.subplots()
 	ax.imshow(img)
 	ax.scatter(x_values, y_values)
-
 	for i, (c_f, c_t) in enumerate(zip(connect_from, connect_to)):
-		ax.plot([x_values[c_f], x_values[i]], [y_values[c_f], y_values[i]], color='black')
-		ax.plot([x_values[i], x_values[c_t]], [y_values[i], y_values[c_t]], color='black')
+		ax.plot([x_values[c_f], x_values[c_t]], [y_values[c_f], y_values[c_t]], color='red')
 	if show:
 		plt.show()
 
 if __name__ == '__main__':
-	img_path = '../imm3943/IMM-Frontal Face DB SMALL/05_10.jpg'
-	visualize_checkpoints(img_path)
-
+    img_path = "...\\Images and Annotations/126.jpg"
+    visualize_checkpoints(img_path)
